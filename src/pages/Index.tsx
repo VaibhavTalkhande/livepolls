@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { PlusCircle } from "lucide-react";
 import { CreatePollForm } from "@/components/CreatePollForm";
 import { PollItem } from "@/components/PollItem";
-import { Poll } from "@/types/poll";
+import { Poll, RawPoll } from "@/types/poll";
 
 export default function Index() {
   const [questions, setQuestions] = useState<Poll[]>([]);
@@ -53,7 +53,14 @@ export default function Index() {
       return;
     }
 
-    setQuestions(data || []);
+    // Convert raw data to Poll type
+    const convertedPolls: Poll[] = (data as RawPoll[]).map(rawPoll => ({
+      ...rawPoll,
+      options: rawPoll.options as string[],
+      votes: rawPoll.votes as Record<string, number> | null
+    }));
+
+    setQuestions(convertedPolls);
   };
 
   return (
