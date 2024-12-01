@@ -15,18 +15,21 @@ export type Database = {
           id: number
           options: Json
           question: string
+          votes: Json | null
         }
         Insert: {
           correct_option: number
           id?: number
           options: Json
           question: string
+          votes?: Json | null
         }
         Update: {
           correct_option?: number
           id?: number
           options?: Json
           question?: string
+          votes?: Json | null
         }
         Relationships: []
       }
