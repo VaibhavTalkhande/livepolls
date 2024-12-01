@@ -1,4 +1,3 @@
-import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/components/ui/use-toast";
@@ -57,42 +56,40 @@ export function PollItem({ poll }: { poll: Poll }) {
       <h2 className="text-xl font-semibold mb-4">{poll.question}</h2>
       <div className="space-y-4">
         {poll.options.map((option: string, index: number) => (
-          <div key={index} className="space-y-2">
-            <div className="flex justify-between items-center">
-              <span className="text-sm">{option}</span>
+          <div 
+            key={index} 
+            onClick={() => !hasVoted && !isVoting && handleVote(index)}
+            className={`p-4 rounded-lg transition-all duration-200 ${
+              !hasVoted && !isVoting ? 'cursor-pointer hover:bg-accent' : ''
+            } ${
+              index === poll.correct_option && (hasVoted || poll.votes) 
+                ? 'bg-green-100 border-green-500' 
+                : 'border border-input'
+            }`}
+          >
+            <div className="flex justify-between items-center mb-2">
+              <span className={`text-sm ${
+                index === poll.correct_option && (hasVoted || poll.votes) 
+                  ? 'text-green-600 font-medium' 
+                  : ''
+              }`}>
+                {option}
+                {isVoting && !hasVoted && (
+                  <Loader2 className="h-4 w-4 animate-spin inline ml-2" />
+                )}
+              </span>
               {(hasVoted || poll.votes) && (
                 <span className="text-sm text-muted-foreground">
                   {getVotePercentage(poll.votes, index).toFixed(1)}%
                 </span>
               )}
             </div>
-            <div className="flex gap-2 items-center">
-              <Progress 
-                value={getVotePercentage(poll.votes, index)} 
-                className={`transition-all duration-500 ${
-                  index === poll.correct_option ? 'bg-green-100' : ''
-                }`}
-              />
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handleVote(index)}
-                disabled={isVoting || hasVoted}
-                className={`min-w-[80px] ${
-                  index === poll.correct_option && (hasVoted || poll.votes) 
-                    ? 'border-green-500 text-green-600' 
-                    : ''
-                }`}
-              >
-                {isVoting ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : hasVoted ? (
-                  index === poll.correct_option ? '✓ Correct' : 'Voted'
-                ) : (
-                  'Vote'
-                )}
-              </Button>
-            </div>
+            <Progress 
+              value={getVotePercentage(poll.votes, index)} 
+              className={`transition-all duration-500 ${
+                index === poll.correct_option ? 'bg-green-100' : ''
+              }`}
+            />
           </div>
         ))}
       </div>
