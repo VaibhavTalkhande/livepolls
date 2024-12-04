@@ -29,22 +29,28 @@ export type Database = {
       }
       questions: {
         Row: {
-          correct_option: number
+          correct_option: number | null
+          correct_options: number[] | null
           id: number
+          multiple_choice: boolean | null
           options: Json
           question: string
           votes: Json | null
         }
         Insert: {
-          correct_option: number
+          correct_option?: number | null
+          correct_options?: number[] | null
           id?: number
+          multiple_choice?: boolean | null
           options: Json
           question: string
           votes?: Json | null
         }
         Update: {
-          correct_option?: number
+          correct_option?: number | null
+          correct_options?: number[] | null
           id?: number
+          multiple_choice?: boolean | null
           options?: Json
           question?: string
           votes?: Json | null

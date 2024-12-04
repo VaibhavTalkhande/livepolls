@@ -3,11 +3,15 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 export function CreatePollForm({ onClose }: { onClose: () => void }) {
   const [newQuestion, setNewQuestion] = useState("");
   const [newOptions, setNewOptions] = useState(["", ""]);
-  const [correctOption, setCorrectOption] = useState(0);
+  const [hasCorrectAnswer, setHasCorrectAnswer] = useState(false);
+  const [isMultipleChoice, setIsMultipleChoice] = useState(false);
+  const [selectedOptions, setSelectedOptions] = useState<number[]>([]);
   const { toast } = useToast();
 
   const handleCreatePoll = async (e: React.FormEvent) => {
@@ -22,13 +26,24 @@ export function CreatePollForm({ onClose }: { onClose: () => void }) {
       return;
     }
 
+    if (hasCorrectAnswer && selectedOptions.length === 0) {
+      toast({
+        title: "Invalid selection",
+        description: "Please select at least one correct answer",
+        variant: "destructive",
+      });
+      return;
+    }
+
     // Insert the poll
     const { error: insertError } = await supabase
       .from('questions')
       .insert({
         question: newQuestion,
         options: newOptions,
-        correct_option: correctOption,
+        correct_option: !isMultipleChoice && hasCorrectAnswer ? selectedOptions[0] : null,
+        correct_options: isMultipleChoice && hasCorrectAnswer ? selectedOptions : [],
+        multiple_choice: isMultipleChoice,
         votes: {}
       });
 
@@ -71,12 +86,26 @@ export function CreatePollForm({ onClose }: { onClose: () => void }) {
 
     setNewQuestion("");
     setNewOptions(["", ""]);
-    setCorrectOption(0);
+    setSelectedOptions([]);
+    setHasCorrectAnswer(false);
+    setIsMultipleChoice(false);
     onClose();
     toast({
       title: "Success!",
       description: "Poll created successfully",
     });
+  };
+
+  const toggleOption = (index: number) => {
+    if (isMultipleChoice) {
+      setSelectedOptions(prev => 
+        prev.includes(index) 
+          ? prev.filter(i => i !== index)
+          : [...prev, index]
+      );
+    } else {
+      setSelectedOptions([index]);
+    }
   };
 
   return (
@@ -91,6 +120,31 @@ export function CreatePollForm({ onClose }: { onClose: () => void }) {
             className="w-full p-2 border rounded-md"
             required
           />
+        </div>
+
+        <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="has-correct-answer"
+              checked={hasCorrectAnswer}
+              onCheckedChange={setHasCorrectAnswer}
+            />
+            <Label htmlFor="has-correct-answer">Has correct answer</Label>
+          </div>
+
+          {hasCorrectAnswer && (
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="multiple-choice"
+                checked={isMultipleChoice}
+                onCheckedChange={(checked) => {
+                  setIsMultipleChoice(checked);
+                  setSelectedOptions([]);
+                }}
+              />
+              <Label htmlFor="multiple-choice">Multiple choice</Label>
+            </div>
+          )}
         </div>
         
         <div>
@@ -109,13 +163,15 @@ export function CreatePollForm({ onClose }: { onClose: () => void }) {
                 placeholder={`Option ${index + 1}`}
                 required
               />
-              <input
-                type="radio"
-                name="correctOption"
-                checked={correctOption === index}
-                onChange={() => setCorrectOption(index)}
-                className="mt-3"
-              />
+              {hasCorrectAnswer && (
+                <input
+                  type={isMultipleChoice ? "checkbox" : "radio"}
+                  name="correctOption"
+                  checked={selectedOptions.includes(index)}
+                  onChange={() => toggleOption(index)}
+                  className="mt-3"
+                />
+              )}
             </div>
           ))}
           {newOptions.length < 4 && (
