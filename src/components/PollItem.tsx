@@ -4,7 +4,6 @@ import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Poll } from "@/types/poll";
 import { useState } from "react";
-import { Loader2 } from "lucide-react";
 
 export function PollItem({ poll }: { poll: Poll }) {
   const { toast } = useToast();
@@ -59,24 +58,32 @@ export function PollItem({ poll }: { poll: Poll }) {
           <div 
             key={index} 
             onClick={() => !hasVoted && !isVoting && handleVote(index)}
-            className={`p-4 rounded-lg transition-all duration-200 ${
-              !hasVoted && !isVoting ? 'cursor-pointer hover:bg-accent' : ''
+            className={`relative p-4 rounded-lg transition-all duration-200 overflow-hidden ${
+              !hasVoted && !isVoting ? 'cursor-pointer hover:bg-accent/50' : ''
             } ${
               index === poll.correct_option && (hasVoted || poll.votes) 
-                ? 'bg-green-100 border-green-500' 
+                ? 'border-green-500' 
                 : 'border border-input'
             }`}
           >
-            <div className="flex justify-between items-center mb-2">
+            {/* Background progress bar */}
+            <div 
+              className={`absolute inset-0 transition-all duration-500 ${
+                index === poll.correct_option ? 'bg-green-100' : 'bg-accent'
+              }`}
+              style={{
+                width: (hasVoted || poll.votes) ? `${getVotePercentage(poll.votes, index)}%` : '0%'
+              }}
+            />
+            
+            {/* Content */}
+            <div className="relative flex justify-between items-center">
               <span className={`text-sm ${
                 index === poll.correct_option && (hasVoted || poll.votes) 
                   ? 'text-green-600 font-medium' 
                   : ''
               }`}>
                 {option}
-                {isVoting && !hasVoted && (
-                  <Loader2 className="h-4 w-4 animate-spin inline ml-2" />
-                )}
               </span>
               {(hasVoted || poll.votes) && (
                 <span className="text-sm text-muted-foreground">
@@ -84,12 +91,6 @@ export function PollItem({ poll }: { poll: Poll }) {
                 </span>
               )}
             </div>
-            <Progress 
-              value={getVotePercentage(poll.votes, index)} 
-              className={`transition-all duration-500 ${
-                index === poll.correct_option ? 'bg-green-100' : ''
-              }`}
-            />
           </div>
         ))}
       </div>
