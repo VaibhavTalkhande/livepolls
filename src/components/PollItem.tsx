@@ -1,5 +1,4 @@
 import { Card } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Poll } from "@/types/poll";
@@ -59,7 +58,7 @@ export function PollItem({ poll }: { poll: Poll }) {
             key={index} 
             onClick={() => !hasVoted && !isVoting && handleVote(index)}
             className={`relative p-4 rounded-lg transition-all duration-200 overflow-hidden ${
-              !hasVoted && !isVoting ? 'cursor-pointer hover:bg-accent/50' : ''
+              !hasVoted && !isVoting ? 'cursor-pointer hover:bg-blue-50' : ''
             } ${
               index === poll.correct_option && (hasVoted || poll.votes) 
                 ? 'border-green-500' 
@@ -69,7 +68,7 @@ export function PollItem({ poll }: { poll: Poll }) {
             {/* Background progress bar */}
             <div 
               className={`absolute inset-0 transition-all duration-500 ${
-                index === poll.correct_option ? 'bg-green-100' : 'bg-accent'
+                index === poll.correct_option ? 'bg-green-100' : 'bg-blue-100'
               }`}
               style={{
                 width: (hasVoted || poll.votes) ? `${getVotePercentage(poll.votes, index)}%` : '0%'
