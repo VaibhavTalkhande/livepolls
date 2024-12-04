@@ -2,15 +2,17 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { PlusCircle } from "lucide-react";
+import { PlusCircle, LogOut } from "lucide-react";
 import { CreatePollForm } from "@/components/CreatePollForm";
 import { PollItem } from "@/components/PollItem";
 import { Poll, RawPoll } from "@/types/poll";
+import { useAuth } from "@/components/AuthProvider";
 
 export default function Index() {
   const [questions, setQuestions] = useState<Poll[]>([]);
   const [showForm, setShowForm] = useState(false);
   const { toast } = useToast();
+  const { signOut, session } = useAuth();
 
   useEffect(() => {
     // Fetch initial questions
@@ -66,14 +68,27 @@ export default function Index() {
   return (
     <div className="container mx-auto p-4 max-w-4xl">
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">Live Polls</h1>
-        <Button
-          onClick={() => setShowForm(!showForm)}
-          className="gap-2"
-        >
-          <PlusCircle className="h-4 w-4" />
-          Create Poll
-        </Button>
+        <div>
+          <h1 className="text-3xl font-bold">Live Polls</h1>
+          <p className="text-sm text-gray-600">Welcome, {session?.user?.email}</p>
+        </div>
+        <div className="flex gap-4">
+          <Button
+            onClick={() => setShowForm(!showForm)}
+            className="gap-2"
+          >
+            <PlusCircle className="h-4 w-4" />
+            Create Poll
+          </Button>
+          <Button
+            variant="outline"
+            onClick={signOut}
+            className="gap-2"
+          >
+            <LogOut className="h-4 w-4" />
+            Logout
+          </Button>
+        </div>
       </div>
 
       {showForm && (

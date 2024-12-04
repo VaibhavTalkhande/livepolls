@@ -22,7 +22,8 @@ export function CreatePollForm({ onClose }: { onClose: () => void }) {
       return;
     }
 
-    const { error } = await supabase
+    // Insert the poll
+    const { error: insertError } = await supabase
       .from('questions')
       .insert({
         question: newQuestion,
@@ -31,13 +32,41 @@ export function CreatePollForm({ onClose }: { onClose: () => void }) {
         votes: {}
       });
 
-    if (error) {
+    if (insertError) {
       toast({
         title: "Error creating poll",
-        description: error.message,
+        description: insertError.message,
         variant: "destructive",
       });
       return;
+    }
+
+    // Fetch all users' emails
+    const { data: profiles, error: profilesError } = await supabase
+      .from('profiles')
+      .select('email');
+
+    if (profilesError) {
+      console.error('Error fetching profiles:', profilesError);
+      return;
+    }
+
+    // Send email notifications
+    try {
+      await fetch('/functions/v1/send-poll-notification', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${process.env.SUPABASE_ANON_KEY}`,
+        },
+        body: JSON.stringify({
+          to: profiles.map(profile => profile.email),
+          question: newQuestion,
+          options: newOptions,
+        }),
+      });
+    } catch (error) {
+      console.error('Error sending notifications:', error);
     }
 
     setNewQuestion("");
