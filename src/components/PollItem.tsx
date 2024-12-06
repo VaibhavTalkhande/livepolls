@@ -52,7 +52,6 @@ export function PollItem({ poll, onDelete }: { poll: Poll; onDelete?: () => void
     if (!session?.user?.id) return;
 
     try {
-      // First try to get the existing score
       const { data: existingScore, error: fetchError } = await supabase
         .from('scores')
         .select('*')
@@ -62,7 +61,6 @@ export function PollItem({ poll, onDelete }: { poll: Poll; onDelete?: () => void
       if (fetchError) throw fetchError;
 
       if (existingScore) {
-        // Update existing score
         const { error: updateError } = await supabase
           .from('scores')
           .update({ score: existingScore.score + 1 })
@@ -70,7 +68,6 @@ export function PollItem({ poll, onDelete }: { poll: Poll; onDelete?: () => void
 
         if (updateError) throw updateError;
       } else {
-        // Create new score entry
         const { error: insertError } = await supabase
           .from('scores')
           .insert({
@@ -130,7 +127,6 @@ export function PollItem({ poll, onDelete }: { poll: Poll; onDelete?: () => void
       }));
       setHasVoted(true);
 
-      // Update score if answer is correct
       if (poll.correct_option === optionIndex) {
         await updateUserScore();
       }
@@ -190,7 +186,6 @@ export function PollItem({ poll, onDelete }: { poll: Poll; onDelete?: () => void
       }));
       setHasVoted(true);
 
-      // Update score if all answers are correct
       const isCorrect = selectedOptions.every(option => 
         poll.correct_options?.includes(option)
       ) && selectedOptions.length === poll.correct_options?.length;

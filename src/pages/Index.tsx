@@ -6,7 +6,7 @@ import { PlusCircle, LogOut } from "lucide-react";
 import { CreatePollForm } from "@/components/CreatePollForm";
 import { PollItem } from "@/components/PollItem";
 import { Leaderboard } from "@/components/Leaderboard";
-import { Poll, RawPoll } from "@/types/poll";
+import { Poll, RawPoll, VoteData } from "@/types/poll";
 import { useAuth } from "@/components/AuthProvider";
 
 export default function Index() {
@@ -30,11 +30,27 @@ export default function Index() {
       return;
     }
 
-    const convertedPolls: Poll[] = (data as RawPoll[]).map(rawPoll => ({
-      ...rawPoll,
-      options: rawPoll.options as string[],
-      votes: rawPoll.votes as Record<string, number> | null
-    }));
+    const convertedPolls: Poll[] = (data as RawPoll[]).map(rawPoll => {
+      const votes: Record<string, VoteData> = {};
+      if (rawPoll.votes) {
+        Object.entries(rawPoll.votes as Record<string, any>).forEach(([key, value]) => {
+          if (typeof value === 'number') {
+            votes[key] = {
+              count: value,
+              users: []
+            };
+          } else {
+            votes[key] = value as VoteData;
+          }
+        });
+      }
+
+      return {
+        ...rawPoll,
+        options: rawPoll.options as string[],
+        votes: votes
+      };
+    });
 
     setQuestions(convertedPolls);
   };
