@@ -101,7 +101,7 @@ export function PollItem({ poll, onDelete }: { poll: Poll; onDelete?: () => void
     }
 
     setIsVoting(true);
-    const currentVotes = { ...localPoll.votes } || {};
+    const currentVotes = localPoll.votes || {};
     const updatedVotes = {
       ...currentVotes,
       [optionIndex]: {
@@ -159,7 +159,7 @@ export function PollItem({ poll, onDelete }: { poll: Poll; onDelete?: () => void
     }
 
     setIsVoting(true);
-    const currentVotes = { ...localPoll.votes } || {};
+    const currentVotes = localPoll.votes || {};
     const updatedVotes = { ...currentVotes };
     
     selectedOptions.forEach(optionIndex => {
