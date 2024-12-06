@@ -16,9 +16,10 @@ export function PollItem({ poll, onDelete }: { poll: Poll; onDelete?: () => void
   const [localPoll, setLocalPoll] = useState<Poll>(poll);
   const [isCreator, setIsCreator] = useState(false);
   const { session } = useAuth();
-  const { hasVoted, setHasVoted } = useVotePersistence(poll);
+  const { hasVoted, setHasVoted, selectedOptions: persistedOptions } = useVotePersistence(poll);
   const { selectedOptions, isVoting, handleVote, submitMultipleChoiceVote } = VoteHandler({
     poll: localPoll,
+    initialSelectedOptions: persistedOptions,
     onVoteSubmitted: (updatedVotes) => {
       setLocalPoll(prev => ({
         ...prev,

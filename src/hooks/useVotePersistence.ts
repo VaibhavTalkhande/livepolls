@@ -5,6 +5,7 @@ import { useAuth } from "@/components/AuthProvider";
 
 export function useVotePersistence(poll: Poll) {
   const [hasVoted, setHasVoted] = useState(false);
+  const [selectedOptions, setSelectedOptions] = useState<number[]>([]);
   const { session } = useAuth();
 
   useEffect(() => {
@@ -30,22 +31,26 @@ export function useVotePersistence(poll: Poll) {
         }
 
         console.log('Previous vote data:', data);
-        setHasVoted(!!data);
-
-        // If there's a previous vote, update the local poll state
-        if (data && poll.votes) {
-          const currentVotes = { ...poll.votes };
-          data.selected_options.forEach((optionIndex: number) => {
-            if (!currentVotes[optionIndex]) {
-              currentVotes[optionIndex] = {
-                count: 1,
-                users: [{
-                  id: session.user.id,
-                  email: session.user.email
-                }]
-              };
-            }
-          });
+        
+        if (data) {
+          setHasVoted(true);
+          setSelectedOptions(data.selected_options);
+          
+          // Update local poll votes state if needed
+          if (poll.votes) {
+            const currentVotes = { ...poll.votes };
+            data.selected_options.forEach((optionIndex: number) => {
+              if (!currentVotes[optionIndex]) {
+                currentVotes[optionIndex] = {
+                  count: 1,
+                  users: [{
+                    id: session.user.id,
+                    email: session.user.email
+                  }]
+                };
+              }
+            });
+          }
         }
       } catch (error) {
         console.error('Error in checkPreviousVote:', error);
@@ -55,5 +60,5 @@ export function useVotePersistence(poll: Poll) {
     checkPreviousVote();
   }, [poll.id, session?.user]);
 
-  return { hasVoted, setHasVoted };
+  return { hasVoted, setHasVoted, selectedOptions };
 }

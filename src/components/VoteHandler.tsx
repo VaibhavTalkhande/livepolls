@@ -2,17 +2,17 @@ import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Poll } from "@/types/poll";
-import { Button } from "@/components/ui/button";
 import { useAuth } from "@/components/AuthProvider";
 
 type VoteHandlerProps = {
   poll: Poll;
+  initialSelectedOptions?: number[];
   onVoteSubmitted: (updatedVotes: any) => void;
   setHasVoted: (value: boolean) => void;
 };
 
-export function VoteHandler({ poll, onVoteSubmitted, setHasVoted }: VoteHandlerProps) {
-  const [selectedOptions, setSelectedOptions] = useState<number[]>([]);
+export function VoteHandler({ poll, initialSelectedOptions = [], onVoteSubmitted, setHasVoted }: VoteHandlerProps) {
+  const [selectedOptions, setSelectedOptions] = useState<number[]>(initialSelectedOptions);
   const [isVoting, setIsVoting] = useState(false);
   const { toast } = useToast();
   const { session } = useAuth();
