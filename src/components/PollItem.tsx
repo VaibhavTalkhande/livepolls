@@ -1,22 +1,32 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Trash2 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Poll } from "@/types/poll";
 import { useState, useEffect } from "react";
-import { Trash2 } from "lucide-react";
 import { useAuth } from "@/components/AuthProvider";
 import { VoteDetails } from "./VoteDetails";
 import { PollOptions } from "./PollOptions";
+import { useVotePersistence } from "@/hooks/useVotePersistence";
+import { VoteHandler } from "./VoteHandler";
 
 export function PollItem({ poll, onDelete }: { poll: Poll; onDelete?: () => void }) {
   const { toast } = useToast();
-  const [isVoting, setIsVoting] = useState(false);
-  const [hasVoted, setHasVoted] = useState(false);
-  const [selectedOptions, setSelectedOptions] = useState<number[]>([]);
   const [localPoll, setLocalPoll] = useState<Poll>(poll);
   const [isCreator, setIsCreator] = useState(false);
   const { session } = useAuth();
+  const { hasVoted, setHasVoted } = useVotePersistence(poll);
+  const { selectedOptions, isVoting, handleVote, submitMultipleChoiceVote } = VoteHandler({
+    poll: localPoll,
+    onVoteSubmitted: (updatedVotes) => {
+      setLocalPoll(prev => ({
+        ...prev,
+        votes: updatedVotes
+      }));
+    },
+    setHasVoted
+  });
 
   useEffect(() => {
     if (session?.user) {
@@ -45,167 +55,6 @@ export function PollItem({ poll, onDelete }: { poll: Poll; onDelete?: () => void
         description: error.message,
         variant: "destructive",
       });
-    }
-  };
-
-  const updateUserScore = async () => {
-    if (!session?.user?.id) return;
-
-    try {
-      const { data: existingScore, error: fetchError } = await supabase
-        .from('scores')
-        .select('*')
-        .eq('user_id', session.user.id)
-        .maybeSingle();
-
-      if (fetchError) throw fetchError;
-
-      if (existingScore) {
-        const { error: updateError } = await supabase
-          .from('scores')
-          .update({ score: existingScore.score + 1 })
-          .eq('user_id', session.user.id);
-
-        if (updateError) throw updateError;
-      } else {
-        const { error: insertError } = await supabase
-          .from('scores')
-          .insert({
-            user_id: session.user.id,
-            score: 1,
-            username: session.user.email?.split('@')[0] || 'Anonymous'
-          });
-
-        if (insertError) throw insertError;
-      }
-    } catch (error: any) {
-      console.error('Error updating score:', error);
-      toast({
-        title: "Error updating score",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleVote = async (optionIndex: number) => {
-    if (!session?.user) return;
-
-    if (poll.multiple_choice) {
-      setSelectedOptions(prev => 
-        prev.includes(optionIndex) 
-          ? prev.filter(i => i !== optionIndex)
-          : [...prev, optionIndex]
-      );
-      return;
-    }
-
-    setIsVoting(true);
-    const currentVotes = localPoll.votes || {};
-    const updatedVotes = {
-      ...currentVotes,
-      [optionIndex]: {
-        count: ((currentVotes[optionIndex]?.count || 0) + 1),
-        users: [...(currentVotes[optionIndex]?.users || []), {
-          id: session.user.id,
-          email: session.user.email
-        }]
-      }
-    };
-
-    try {
-      const { error } = await supabase
-        .from('questions')
-        .update({ votes: updatedVotes })
-        .eq('id', poll.id);
-
-      if (error) throw error;
-
-      setLocalPoll(prev => ({
-        ...prev,
-        votes: updatedVotes
-      }));
-      setHasVoted(true);
-
-      if (poll.correct_option === optionIndex) {
-        await updateUserScore();
-      }
-
-      toast({
-        title: "Vote submitted",
-        description: "Your vote has been recorded successfully.",
-      });
-    } catch (error: any) {
-      toast({
-        title: "Error voting",
-        description: error.message,
-        variant: "destructive",
-      });
-    } finally {
-      setIsVoting(false);
-    }
-  };
-
-  const submitMultipleChoiceVote = async () => {
-    if (!session?.user) return;
-    
-    if (selectedOptions.length === 0) {
-      toast({
-        title: "Invalid selection",
-        description: "Please select at least one option",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsVoting(true);
-    const currentVotes = localPoll.votes || {};
-    const updatedVotes = { ...currentVotes };
-    
-    selectedOptions.forEach(optionIndex => {
-      updatedVotes[optionIndex] = {
-        count: ((currentVotes[optionIndex]?.count || 0) + 1),
-        users: [...(currentVotes[optionIndex]?.users || []), {
-          id: session.user.id,
-          email: session.user.email
-        }]
-      };
-    });
-
-    try {
-      const { error } = await supabase
-        .from('questions')
-        .update({ votes: updatedVotes })
-        .eq('id', poll.id);
-
-      if (error) throw error;
-
-      setLocalPoll(prev => ({
-        ...prev,
-        votes: updatedVotes
-      }));
-      setHasVoted(true);
-
-      const isCorrect = selectedOptions.every(option => 
-        poll.correct_options?.includes(option)
-      ) && selectedOptions.length === poll.correct_options?.length;
-
-      if (isCorrect) {
-        await updateUserScore();
-      }
-
-      toast({
-        title: "Vote submitted",
-        description: "Your votes have been recorded successfully.",
-      });
-    } catch (error: any) {
-      toast({
-        title: "Error voting",
-        description: error.message,
-        variant: "destructive",
-      });
-    } finally {
-      setIsVoting(false);
     }
   };
 
