@@ -31,6 +31,22 @@ export function useVotePersistence(poll: Poll) {
 
         console.log('Previous vote data:', data);
         setHasVoted(!!data);
+
+        // If there's a previous vote, update the local poll state
+        if (data && poll.votes) {
+          const currentVotes = { ...poll.votes };
+          data.selected_options.forEach((optionIndex: number) => {
+            if (!currentVotes[optionIndex]) {
+              currentVotes[optionIndex] = {
+                count: 1,
+                users: [{
+                  id: session.user.id,
+                  email: session.user.email
+                }]
+              };
+            }
+          });
+        }
       } catch (error) {
         console.error('Error in checkPreviousVote:', error);
       }
