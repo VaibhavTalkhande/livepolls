@@ -1,6 +1,16 @@
 import { Json } from "@/integrations/supabase/types";
 
-export type PollVotes = Record<string, number>;
+export type VoteUser = {
+  id: string | undefined;
+  email: string | undefined;
+};
+
+export type VoteData = {
+  count: number;
+  users: VoteUser[];
+};
+
+export type PollVotes = Record<string, VoteData>;
 
 export type PollOption = string;
 

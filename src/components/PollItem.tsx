@@ -4,7 +4,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Poll } from "@/types/poll";
 import { useState, useEffect } from "react";
-import { Trash2, User } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import { useAuth } from "@/components/AuthProvider";
 import { VoteDetails } from "./VoteDetails";
 import { PollOptions } from "./PollOptions";
@@ -49,29 +49,51 @@ export function PollItem({ poll, onDelete }: { poll: Poll; onDelete?: () => void
   };
 
   const updateUserScore = async () => {
-    const { data: existingScore } = await supabase
-      .from('scores')
-      .select('*')
-      .eq('user_id', session?.user?.id)
-      .single();
+    if (!session?.user?.id) return;
 
-    if (existingScore) {
-      await supabase
+    try {
+      // First try to get the existing score
+      const { data: existingScore, error: fetchError } = await supabase
         .from('scores')
-        .update({ score: existingScore.score + 1 })
-        .eq('user_id', session?.user?.id);
-    } else {
-      await supabase
-        .from('scores')
-        .insert({
-          user_id: session?.user?.id,
-          score: 1,
-          username: session?.user?.email?.split('@')[0] || 'Anonymous'
-        });
+        .select('*')
+        .eq('user_id', session.user.id)
+        .maybeSingle();
+
+      if (fetchError) throw fetchError;
+
+      if (existingScore) {
+        // Update existing score
+        const { error: updateError } = await supabase
+          .from('scores')
+          .update({ score: existingScore.score + 1 })
+          .eq('user_id', session.user.id);
+
+        if (updateError) throw updateError;
+      } else {
+        // Create new score entry
+        const { error: insertError } = await supabase
+          .from('scores')
+          .insert({
+            user_id: session.user.id,
+            score: 1,
+            username: session.user.email?.split('@')[0] || 'Anonymous'
+          });
+
+        if (insertError) throw insertError;
+      }
+    } catch (error: any) {
+      console.error('Error updating score:', error);
+      toast({
+        title: "Error updating score",
+        description: error.message,
+        variant: "destructive",
+      });
     }
   };
 
   const handleVote = async (optionIndex: number) => {
+    if (!session?.user) return;
+
     if (poll.multiple_choice) {
       setSelectedOptions(prev => 
         prev.includes(optionIndex) 
@@ -88,8 +110,8 @@ export function PollItem({ poll, onDelete }: { poll: Poll; onDelete?: () => void
       [optionIndex]: {
         count: ((currentVotes[optionIndex]?.count || 0) + 1),
         users: [...(currentVotes[optionIndex]?.users || []), {
-          id: session?.user?.id,
-          email: session?.user?.email
+          id: session.user.id,
+          email: session.user.email
         }]
       }
     };
@@ -129,6 +151,8 @@ export function PollItem({ poll, onDelete }: { poll: Poll; onDelete?: () => void
   };
 
   const submitMultipleChoiceVote = async () => {
+    if (!session?.user) return;
+    
     if (selectedOptions.length === 0) {
       toast({
         title: "Invalid selection",
@@ -146,8 +170,8 @@ export function PollItem({ poll, onDelete }: { poll: Poll; onDelete?: () => void
       updatedVotes[optionIndex] = {
         count: ((currentVotes[optionIndex]?.count || 0) + 1),
         users: [...(currentVotes[optionIndex]?.users || []), {
-          id: session?.user?.id,
-          email: session?.user?.email
+          id: session.user.id,
+          email: session.user.email
         }]
       };
     });
