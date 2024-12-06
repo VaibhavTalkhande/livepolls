@@ -3,14 +3,48 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Poll } from "@/types/poll";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { Trash2 } from "lucide-react";
+import { useAuth } from "@/components/AuthProvider";
 
-export function PollItem({ poll }: { poll: Poll }) {
+export function PollItem({ poll, onDelete }: { poll: Poll; onDelete?: () => void }) {
   const { toast } = useToast();
   const [isVoting, setIsVoting] = useState(false);
   const [hasVoted, setHasVoted] = useState(false);
   const [selectedOptions, setSelectedOptions] = useState<number[]>([]);
   const [localPoll, setLocalPoll] = useState<Poll>(poll);
+  const [isCreator, setIsCreator] = useState(false);
+  const { session } = useAuth();
+
+  useEffect(() => {
+    if (session?.user) {
+      setIsCreator(session.user.id === poll.creator_id);
+    }
+  }, [session, poll.creator_id]);
+
+  const handleDelete = async () => {
+    try {
+      const { error } = await supabase
+        .from('questions')
+        .delete()
+        .eq('id', poll.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Poll deleted successfully",
+      });
+
+      if (onDelete) onDelete();
+    } catch (error: any) {
+      toast({
+        title: "Error deleting poll",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
 
   const handleVote = async (optionIndex: number) => {
     if (poll.multiple_choice) {
@@ -125,7 +159,20 @@ export function PollItem({ poll }: { poll: Poll }) {
 
   return (
     <Card key={poll.id} className="p-6 animate-fade-in">
-      <h2 className="text-xl font-semibold mb-4">{poll.question}</h2>
+      <div className="flex justify-between items-start mb-4">
+        <h2 className="text-xl font-semibold">{poll.question}</h2>
+        {isCreator && (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleDelete}
+            className="text-red-500 hover:text-red-700"
+          >
+            <Trash2 className="h-5 w-5" />
+          </Button>
+        )}
+      </div>
+
       <div className="space-y-4">
         {poll.options.map((option: string, index: number) => (
           <div 
@@ -139,7 +186,6 @@ export function PollItem({ poll }: { poll: Poll }) {
                 : 'border border-input'
             }`}
           >
-            {/* Background progress bar */}
             <div 
               className={`absolute inset-0 transition-all duration-500 ${
                 isCorrectAnswer(index) ? 'bg-green-100' : 'bg-blue-100'
@@ -149,7 +195,6 @@ export function PollItem({ poll }: { poll: Poll }) {
               }}
             />
             
-            {/* Content */}
             <div className="relative flex justify-between items-center">
               <span className={`text-sm ${
                 isCorrectAnswer(index) && (hasVoted || localPoll.votes) 
@@ -191,6 +236,20 @@ export function PollItem({ poll }: { poll: Poll }) {
           </div>
         )}
       </div>
+
+      {isCreator && (
+        <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+          <h3 className="font-medium mb-2">Response Details</h3>
+          <div className="space-y-2">
+            {Object.entries(localPoll.votes || {}).map(([optionIndex, votes]) => (
+              <div key={optionIndex} className="flex justify-between">
+                <span>{poll.options[parseInt(optionIndex)]}</span>
+                <span>{votes} votes</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </Card>
   );
 }

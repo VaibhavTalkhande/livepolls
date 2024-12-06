@@ -12,6 +12,7 @@ export type Poll = {
   correct_options?: number[];
   multiple_choice?: boolean;
   votes: PollVotes | null;
+  creator_id: string | null;
 };
 
 export type RawPoll = {
@@ -22,4 +23,5 @@ export type RawPoll = {
   correct_options?: number[];
   multiple_choice?: boolean;
   votes: Json;
+  creator_id: string | null;
 };

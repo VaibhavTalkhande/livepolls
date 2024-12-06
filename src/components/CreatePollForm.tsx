@@ -5,6 +5,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { useAuth } from "@/components/AuthProvider";
 
 export function CreatePollForm({ onClose }: { onClose: () => void }) {
   const [newQuestion, setNewQuestion] = useState("");
@@ -13,6 +14,7 @@ export function CreatePollForm({ onClose }: { onClose: () => void }) {
   const [isMultipleChoice, setIsMultipleChoice] = useState(false);
   const [selectedOptions, setSelectedOptions] = useState<number[]>([]);
   const { toast } = useToast();
+  const { session } = useAuth();
 
   const handleCreatePoll = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,7 +46,8 @@ export function CreatePollForm({ onClose }: { onClose: () => void }) {
         correct_option: !isMultipleChoice && hasCorrectAnswer ? selectedOptions[0] : null,
         correct_options: isMultipleChoice && hasCorrectAnswer ? selectedOptions : [],
         multiple_choice: isMultipleChoice,
-        votes: {}
+        votes: {},
+        creator_id: session?.user?.id
       });
 
     if (insertError) {

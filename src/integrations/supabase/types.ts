@@ -31,6 +31,7 @@ export type Database = {
         Row: {
           correct_option: number | null
           correct_options: number[] | null
+          creator_id: string | null
           id: number
           multiple_choice: boolean | null
           options: Json
@@ -40,6 +41,7 @@ export type Database = {
         Insert: {
           correct_option?: number | null
           correct_options?: number[] | null
+          creator_id?: string | null
           id?: number
           multiple_choice?: boolean | null
           options: Json
@@ -49,11 +51,30 @@ export type Database = {
         Update: {
           correct_option?: number | null
           correct_options?: number[] | null
+          creator_id?: string | null
           id?: number
           multiple_choice?: boolean | null
           options?: Json
           question?: string
           votes?: Json | null
+        }
+        Relationships: []
+      }
+      scores: {
+        Row: {
+          score: number | null
+          user_id: string
+          username: string
+        }
+        Insert: {
+          score?: number | null
+          user_id: string
+          username: string
+        }
+        Update: {
+          score?: number | null
+          user_id?: string
+          username?: string
         }
         Relationships: []
       }
