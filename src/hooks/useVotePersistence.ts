@@ -11,15 +11,28 @@ export function useVotePersistence(poll: Poll) {
     const checkPreviousVote = async () => {
       if (!session?.user) return;
 
-      const { data } = await supabase
-        .from('user_votes')
-        .select('selected_options')
-        .eq('question_id', poll.id)
-        .eq('user_id', session.user.id)
-        .single();
+      try {
+        console.log('Checking previous vote for:', {
+          pollId: poll.id,
+          userId: session.user.id
+        });
 
-      if (data) {
-        setHasVoted(true);
+        const { data, error } = await supabase
+          .from('user_votes')
+          .select('selected_options')
+          .eq('question_id', poll.id)
+          .eq('user_id', session.user.id)
+          .maybeSingle();
+
+        if (error) {
+          console.error('Error checking previous vote:', error);
+          return;
+        }
+
+        console.log('Previous vote data:', data);
+        setHasVoted(!!data);
+      } catch (error) {
+        console.error('Error in checkPreviousVote:', error);
       }
     };
 
