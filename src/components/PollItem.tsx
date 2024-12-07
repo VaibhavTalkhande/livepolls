@@ -41,10 +41,9 @@ export function PollItem({ poll, onDelete }: { poll: Poll; onDelete?: () => void
     try {
       console.log('Starting deletion process for poll:', poll.id);
       
-      // Start a transaction to ensure both operations complete or none do
       const { error } = await supabase.rpc('delete_poll_with_votes', {
         poll_id: poll.id
-      });
+      } as never); // Type assertion needed due to RPC typing limitations
 
       if (error) {
         console.error('Error in deletion transaction:', error);
