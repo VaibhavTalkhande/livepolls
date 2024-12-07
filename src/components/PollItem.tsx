@@ -39,21 +39,27 @@ export function PollItem({ poll, onDelete }: { poll: Poll; onDelete?: () => void
     if (!session?.user) return;
 
     try {
-      // First, delete related user_votes
+      // First, delete all user votes for this poll
       const { error: votesError } = await supabase
         .from('user_votes')
         .delete()
         .eq('question_id', poll.id);
 
-      if (votesError) throw votesError;
+      if (votesError) {
+        console.error('Error deleting user votes:', votesError);
+        throw votesError;
+      }
 
-      // Then delete the poll
+      // Then delete the poll itself
       const { error: pollError } = await supabase
         .from('questions')
         .delete()
         .eq('id', poll.id);
 
-      if (pollError) throw pollError;
+      if (pollError) {
+        console.error('Error deleting poll:', pollError);
+        throw pollError;
+      }
 
       toast({
         title: "Success",
@@ -62,10 +68,10 @@ export function PollItem({ poll, onDelete }: { poll: Poll; onDelete?: () => void
 
       if (onDelete) onDelete();
     } catch (error: any) {
-      console.error('Error deleting poll:', error);
+      console.error('Error in deletion process:', error);
       toast({
         title: "Error deleting poll",
-        description: error.message,
+        description: error.message || "Failed to delete poll",
         variant: "destructive",
       });
     }
