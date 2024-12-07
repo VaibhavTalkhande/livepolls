@@ -39,27 +39,38 @@ export function PollItem({ poll, onDelete }: { poll: Poll; onDelete?: () => void
     if (!session?.user) return;
 
     try {
-      // First, delete all user votes for this poll
-      const { error: votesError } = await supabase
+      console.log('Starting deletion process for poll:', poll.id);
+      
+      // First, delete all votes for this poll
+      const { error: votesError, data: deletedVotes } = await supabase
         .from('user_votes')
         .delete()
-        .eq('question_id', poll.id);
+        .eq('question_id', poll.id)
+        .select();
 
       if (votesError) {
         console.error('Error deleting user votes:', votesError);
         throw votesError;
       }
 
+      console.log('Successfully deleted votes:', deletedVotes);
+
+      // Add a small delay to ensure the votes deletion is processed
+      await new Promise(resolve => setTimeout(resolve, 500));
+
       // Then delete the poll itself
-      const { error: pollError } = await supabase
+      const { error: pollError, data: deletedPoll } = await supabase
         .from('questions')
         .delete()
-        .eq('id', poll.id);
+        .eq('id', poll.id)
+        .select();
 
       if (pollError) {
         console.error('Error deleting poll:', pollError);
         throw pollError;
       }
+
+      console.log('Successfully deleted poll:', deletedPoll);
 
       toast({
         title: "Success",
