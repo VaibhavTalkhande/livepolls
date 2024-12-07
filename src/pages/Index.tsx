@@ -83,18 +83,18 @@ export default function Index() {
   };
 
   return (
-    <div className="container mx-auto p-4">
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <div className="container mx-auto px-4 py-6 md:py-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
         <div className="lg:col-span-2">
-          <div className="flex justify-between items-center mb-8">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6 md:mb-8">
             <div>
-              <h1 className="text-3xl font-bold">Live Polls</h1>
-              <p className="text-sm text-gray-600">Welcome, {session?.user?.email}</p>
+              <h1 className="text-2xl md:text-3xl font-bold">Live Polls</h1>
+              <p className="text-sm text-gray-600 mt-1">Welcome, {session?.user?.email}</p>
             </div>
-            <div className="flex gap-4">
+            <div className="flex flex-col md:flex-row w-full md:w-auto gap-2 md:gap-4">
               <Button
                 onClick={() => setShowForm(!showForm)}
-                className="gap-2"
+                className="w-full md:w-auto gap-2"
               >
                 <PlusCircle className="h-4 w-4" />
                 Create Poll
@@ -102,7 +102,7 @@ export default function Index() {
               <Button
                 variant="outline"
                 onClick={signOut}
-                className="gap-2"
+                className="w-full md:w-auto gap-2"
               >
                 <LogOut className="h-4 w-4" />
                 Logout
@@ -111,10 +111,12 @@ export default function Index() {
           </div>
 
           {showForm && (
-            <CreatePollForm onClose={() => setShowForm(false)} />
+            <div className="mb-6">
+              <CreatePollForm onClose={() => setShowForm(false)} />
+            </div>
           )}
 
-          <div className="space-y-6">
+          <div className="space-y-4 md:space-y-6">
             {questions.map((question) => (
               <PollItem 
                 key={question.id} 
@@ -125,7 +127,7 @@ export default function Index() {
           </div>
         </div>
 
-        <div className="lg:col-span-1">
+        <div className="lg:col-span-1 mt-6 lg:mt-0">
           <Leaderboard />
         </div>
       </div>

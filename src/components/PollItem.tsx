@@ -36,21 +36,33 @@ export function PollItem({ poll, onDelete }: { poll: Poll; onDelete?: () => void
   }, [session, poll.creator_id]);
 
   const handleDelete = async () => {
+    if (!session?.user) return;
+
     try {
-      const { error } = await supabase
+      // First, delete related user_votes
+      const { error: votesError } = await supabase
+        .from('user_votes')
+        .delete()
+        .eq('question_id', poll.id);
+
+      if (votesError) throw votesError;
+
+      // Then delete the poll
+      const { error: pollError } = await supabase
         .from('questions')
         .delete()
         .eq('id', poll.id);
 
-      if (error) throw error;
+      if (pollError) throw pollError;
 
       toast({
         title: "Success",
-        description: "Poll deleted successfully",
+        description: "Poll and related data deleted successfully",
       });
 
       if (onDelete) onDelete();
     } catch (error: any) {
+      console.error('Error deleting poll:', error);
       toast({
         title: "Error deleting poll",
         description: error.message,
@@ -60,9 +72,9 @@ export function PollItem({ poll, onDelete }: { poll: Poll; onDelete?: () => void
   };
 
   return (
-    <Card key={poll.id} className="p-6 animate-fade-in">
-      <div className="flex justify-between items-start mb-4">
-        <h2 className="text-xl font-semibold">{poll.question}</h2>
+    <Card className="w-full p-4 md:p-6 animate-fade-in">
+      <div className="flex flex-col md:flex-row justify-between items-start gap-4 mb-4">
+        <h2 className="text-lg md:text-xl font-semibold">{poll.question}</h2>
         {isCreator && (
           <Button
             variant="ghost"
@@ -88,6 +100,7 @@ export function PollItem({ poll, onDelete }: { poll: Poll; onDelete?: () => void
           <Button 
             onClick={submitMultipleChoiceVote}
             disabled={isVoting}
+            className="w-full md:w-auto"
           >
             Submit Votes
           </Button>
