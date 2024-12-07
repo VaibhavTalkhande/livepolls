@@ -41,14 +41,14 @@ export function PollItem({ poll }: { poll: Poll }) {
       if (!session?.user?.id) return;
 
       try {
-        const { data: voteData } = await supabase
+        const { data: voteData, error } = await supabase
           .from('user_votes')
           .select('*')
           .eq('question_id', poll.id)
-          .eq('user_id', session.user.id)
-          .single();
+          .eq('user_id', session.user.id);
 
-        if (voteData) {
+        // Check if we have any votes
+        if (voteData && voteData.length > 0) {
           setHasVoted(true);
         }
       } catch (error) {
