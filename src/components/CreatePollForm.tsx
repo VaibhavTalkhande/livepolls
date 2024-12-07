@@ -134,20 +134,6 @@ export function CreatePollForm({ onClose }: { onClose: () => void }) {
             />
             <Label htmlFor="has-correct-answer">Has correct answer</Label>
           </div>
-
-          {hasCorrectAnswer && (
-            <div className="flex items-center space-x-2">
-              <Switch
-                id="multiple-choice"
-                checked={isMultipleChoice}
-                onCheckedChange={(checked) => {
-                  setIsMultipleChoice(checked);
-                  setSelectedOptions([]);
-                }}
-              />
-              <Label htmlFor="multiple-choice">Multiple choice</Label>
-            </div>
-          )}
         </div>
         
         <div>

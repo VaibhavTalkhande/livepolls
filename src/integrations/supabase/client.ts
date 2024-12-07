@@ -8,4 +8,11 @@ const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
-export const supabase = createClient<Database>(supabaseUrl, supabaseKey);
+export const supabase = createClient<Database>(supabaseUrl, supabaseKey, {
+  realtime: {
+    params: {
+      eventsPerSecond: 10
+    }
+  }
+
+});

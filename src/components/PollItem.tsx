@@ -36,28 +36,57 @@ export function PollItem({ poll }: { poll: Poll }) {
     checkCreator();
   }, [session?.user?.id, poll.creator_id]);
 
-  useEffect(() => {
-    const checkPreviousVotes = async () => {
-      if (!session?.user?.id) return;
+  const checkPreviousVotes = async () => {
+    if (!session?.user?.id) return;
 
-      try {
-        const { data: voteData, error } = await supabase
-          .from('user_votes')
-          .select('*')
-          .eq('question_id', poll.id)
-          .eq('user_id', session.user.id);
+    try {
+      const { data: voteData, error } = await supabase
+        .from('user_votes')
+        .select('*')
+        .eq('question_id', poll.id)
+        .eq('user_id', session.user.id);
 
-        // Check if we have any votes
-        if (voteData && voteData.length > 0) {
-          setHasVoted(true);
-        }
-      } catch (error) {
-        console.error('Error checking previous votes:', error);
+      // Check if we have any votes
+      if (voteData && voteData.length > 0) {
+        setHasVoted(true);
       }
-    };
-
+    } catch (error) {
+      console.error('Error checking previous votes:', error);
+    }
+  };
+  useEffect(() => {
+    if (!session?.user?.id) return;
     checkPreviousVotes();
   }, [poll.id, session?.user?.id, setHasVoted]);
+
+  useEffect(() => {
+    setLocalPoll(prev => ({
+      ...prev,
+      votes: poll.votes
+    }));
+  }, [poll.votes]);
+
+  useEffect(() =>{
+        const channel = supabase
+      .channel('user_votes_channel')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'user_votes',
+          filter: `question_id=eq.${poll.id}`
+        },
+        () => {
+          checkPreviousVotes();
+        }
+    )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [poll.id]);
 
   return (
     <Card className="w-full p-4 md:p-6 animate-fade-in">
