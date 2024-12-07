@@ -78,10 +78,6 @@ export default function Index() {
     };
   }, []);
 
-  const handlePollDelete = () => {
-    fetchQuestions();
-  };
-
   return (
     <div className="container mx-auto px-4 py-6 md:py-8">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
@@ -121,7 +117,6 @@ export default function Index() {
               <PollItem 
                 key={question.id} 
                 poll={question}
-                onDelete={handlePollDelete}
               />
             ))}
           </div>

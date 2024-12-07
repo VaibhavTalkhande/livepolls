@@ -1,4 +1,5 @@
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Poll } from "@/types/poll";
 import { useState } from "react";
 import { useAuth } from "@/components/AuthProvider";
